@@ -1,9 +1,7 @@
-package test1.controller;
+package SpringSecurityOauthAuthServer.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.access.prepost.PreFilter;
@@ -14,10 +12,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import test1.config.SecurityConfig;
-import test1.entity.User;
-import test1.entity.UserAuthDTO;
-import test1.repository.UserRepository;
+import SpringSecurityOauthAuthServer.entity.User;
+import SpringSecurityOauthAuthServer.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -66,11 +62,6 @@ public class UserController {
     @GetMapping("/user")
     public List<User> findAll() {
         return userRepository.findAll();
-    }
-
-    @GetMapping("/useractive")
-    public Collection<UserAuthDTO> findAllActiveUsers() {
-        return userRepository.findAllActiveUsers();
     }
 
     @GetMapping("/userdetails")

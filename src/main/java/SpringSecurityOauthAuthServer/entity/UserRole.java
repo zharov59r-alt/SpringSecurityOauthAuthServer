@@ -1,4 +1,4 @@
-package test1.entity;
+package SpringSecurityOauthAuthServer.entity;
 
 
 import com.fasterxml.jackson.annotation.JsonBackReference;

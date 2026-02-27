@@ -1,88 +1,114 @@
-package test1.config;
+package SpringSecurityOauthAuthServer.config;
 
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.jwk.source.JWKSource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
-import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.security.web.csrf.CsrfFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import test1.entity.UserAuthDTO;
-import test1.repository.UserRepository;
-import test1.service.CustomFilter;
-import test1.service.CustomPermissionEvaluator;
-import test1.service.ShowCSRFFilter;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
-import java.util.Collection;
-import java.util.List;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.UUID;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.proc.SecurityContext;
 
-@EnableMethodSecurity
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final UserRepository userRepository;
-  //  private final AuthenticationProvider authenticationProvider;
-    private final CustomPermissionEvaluator evaluator;
- //   private final CustomFilter customFilter;
- //   private final ShowCSRFFilter showCSRFFilter;
-/*
     @Bean
-    SecurityFilterChain configure(HttpSecurity http) {
-        return http
-                 .addFilterAt(customFilter, BasicAuthenticationFilter.class)
-             //       .httpBasic(Customizer.withDefaults())
-                //.addFilterBefore(new CustomFilter(), BasicAuthenticationFilter.class)
-            //    .addFilterBefore(customFilter, BasicAuthenticationFilter.class)
-                .authorizeHttpRequests(c -> c.anyRequest().permitAll())
+    @Order(1)
+    public SecurityFilterChain asFilterChain(HttpSecurity http) throws Exception {
+
+        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
+                new OAuth2AuthorizationServerConfigurer();
+
+        return  http
+                .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
+                .with(authorizationServerConfigurer, (s) -> s.oidc(Customizer.withDefaults()))
+                .exceptionHandling((e) ->
+                        e.authenticationEntryPoint(
+                                new LoginUrlAuthenticationEntryPoint("/login")))
                 .build();
     }
-*/
 
     @Bean
-    protected MethodSecurityExpressionHandler createExpressionHandler() {
-        var expressionHandler = new DefaultMethodSecurityExpressionHandler();
-        expressionHandler.setPermissionEvaluator(evaluator);
-        return expressionHandler;
+    @Order(2)
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        return  http
+                    .formLogin(Customizer.withDefaults())
+                    .csrf(csrf -> csrf.disable())
+                    .authorizeHttpRequests(c -> c.anyRequest().authenticated())
+                    .build();
     }
 
     @Bean
-    SecurityFilterChain configure(HttpSecurity http) {
+    public RegisteredClientRepository registeredClientRepository() {
 
+        RegisteredClient registeredClient = RegisteredClient
+                .withId(UUID.randomUUID().toString()) // уникальный внутренний идентификатор
+                // идентификатор клиента – внешний идентификатор клиента, аналогичный имени пользователя
+                .clientId("client")
+                // секрет клиента – аналог пароля пользователя
+                .clientSecret("secret")
+                // метод аутентификации клиента – сообщает, какую аутентификацию ожидает сервер авторизации от клиента при отправке
+                // запросов на токены доступа
+                .clientSettings(ClientSettings.builder().requireProofKey(false).build())
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                // тип гранта авторизации – тип гранта, разрешенный сервером
+                // авторизации для этого клиента. Клиент может использовать несколько типов гранта
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                // URI перенаправления – один из адресов URI, на который сервер
+                // авторизации может перенаправить клиента для предоставления кода авторизации в случае гранта в форме кода авторизации
+                .redirectUri("http://localhost:8080")
+                // область действия  – определяет цель запроса токена доступа.
+                // Область действия можно использовать позже в правилах авторизации
+                .scope(OidcScopes.OPENID)
+                .build();
 
-    return http
-            .httpBasic(Customizer.withDefaults())
-       //     .authenticationProvider(authenticationProvider)
-        //    .authorizeHttpRequests(c -> c
-        //            .requestMatchers("/").hasAuthority("USER") // точка hello только юзерам с привой ADMIN
-         //           .anyRequest().denyAll() // все остальные без ограничений)
-          //  )
-
-          //  .addFilterAfter(showCSRFFilter, CsrfFilter.class)
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(c-> c.anyRequest().authenticated())
-            .build();
-}
-
-/*
-    @Bean
-    PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new InMemoryRegisteredClientRepository(registeredClient);
     }
-*/
+
+    @Bean
+    public JWKSource<SecurityContext> jwkSource() throws NoSuchAlgorithmException {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+        RSAKey rsaKey = new RSAKey.Builder(publicKey)
+                     .privateKey(privateKey)
+                     .keyID(UUID.randomUUID().toString())
+                     .build();
+        JWKSet jwkSet = new JWKSet(rsaKey);
+        return new ImmutableJWKSet<>(jwkSet);
+    }
+
+    @Bean
+    public AuthorizationServerSettings authorizationServerSettings() {
+        return AuthorizationServerSettings.builder().build();
+    }
+
+
+
 }

@@ -1,4 +1,4 @@
-package test1.entity;
+package SpringSecurityOauthAuthServer.entity;
 
 
 import jakarta.persistence.*;

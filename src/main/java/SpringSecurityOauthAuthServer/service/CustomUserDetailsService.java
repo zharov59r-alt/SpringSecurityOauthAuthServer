@@ -1,17 +1,14 @@
-package test1.service;
+package SpringSecurityOauthAuthServer.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-import test1.entity.User;
-import test1.repository.UserRepository;
+import SpringSecurityOauthAuthServer.entity.User;
+import SpringSecurityOauthAuthServer.repository.UserRepository;
 
 import java.util.ArrayList;
 
