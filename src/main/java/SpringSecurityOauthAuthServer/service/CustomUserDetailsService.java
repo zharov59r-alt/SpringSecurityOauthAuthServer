@@ -10,7 +10,11 @@ import org.springframework.stereotype.Component;
 import SpringSecurityOauthAuthServer.entity.User;
 import SpringSecurityOauthAuthServer.repository.UserRepository;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Base64;
 
 @Slf4j
 @Component
@@ -23,13 +27,10 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findUserByEmail(username);
 
-        ArrayList<String> roles = userRepository.findRolesByUser(user);
-
         if (user != null)
             return org.springframework.security.core.userdetails.User.builder()
                     .username(user.getEmail())
                     .password(user.getPassword())
-                    .authorities(AuthorityUtils.createAuthorityList(roles))
                     .build();
         else
             throw new UsernameNotFoundException("User not found");

@@ -27,46 +27,23 @@ public class UserController {
 
     private final UserRepository userRepository;
 
-    //@PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/")
     public String hello() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         Authentication authentication = securityContext.getAuthentication();
-        return "Hello " + authentication.getName() + " " + authentication.getAuthorities().size() + " " + authentication.getAuthorities();
+        return "Hello " + authentication.getName();
     }
 
     @PostMapping("/")
     public String helloPost() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         Authentication authentication = securityContext.getAuthentication();
-        return "Hello POST " + authentication.getName() + " " + authentication.getAuthorities().size() + " " + authentication.getAuthorities();
+        return "Hello POST " + authentication.getName();
     }
-
-    @PreFilter(value = "filterObject == authentication.name", filterTarget = "arr")
-    @GetMapping("/prefilter")
-    public List<String> prefilter(@RequestBody List<String> arr) {
-        return arr;
-    }
-
-    @PostFilter(value = "filterObject == authentication.name") // filterObject ссылка на входной параметр arr
-    @GetMapping("/postfilter")
-    public List<String> postfilter() {
-        List<String> arr = new ArrayList<>();
-        arr.add("first");
-        arr.add("second");
-        arr.add("third");
-        return arr;
-    }
-
 
     @GetMapping("/user")
     public List<User> findAll() {
         return userRepository.findAll();
-    }
-
-    @GetMapping("/userdetails")
-    public Collection<GrantedAuthority> findUserDetails(@AuthenticationPrincipal UserDetails userDetails) {
-        return (Collection<GrantedAuthority>) userDetails.getAuthorities();
     }
 
     @PostMapping("/user")
@@ -74,8 +51,6 @@ public class UserController {
         return userRepository.save(user);
     }
 
-
-    @PreAuthorize("hasPermission(#id, 'user', 'ADMIN')")
     @GetMapping("/user/{id}")
     public User findById(@PathVariable("id") Long id) {
         Optional<User> userOpt = userRepository.findById(id);

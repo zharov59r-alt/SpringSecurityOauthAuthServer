@@ -31,9 +31,6 @@ public class User {
     @Column(name = "user_password", columnDefinition = "text")
     private String password;
 
-    @OneToMany(mappedBy = "user")
-    private List<UserRole> UserRole = new ArrayList<>();
-
     @Override
     public String toString() {
         return "User{" +

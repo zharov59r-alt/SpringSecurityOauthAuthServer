@@ -9,15 +9,5 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-
-
     User findUserByEmail(String email);
-
-
-    @Query("select r.name " +
-            "from UserRole ur " +
-            "join ur.role r " +
-            "where ur.user = :user")
-    ArrayList<String> findRolesByUser(@Param("user") User user);
-
 }
