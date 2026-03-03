@@ -50,6 +50,8 @@ public class SecurityConfig {
                 new OAuth2AuthorizationServerConfigurer();
 
         return  http
+                .authorizeHttpRequests(c -> c.anyRequest().authenticated())
+                .formLogin(Customizer.withDefaults())
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .with(authorizationServerConfigurer, (s) -> s.oidc(Customizer.withDefaults()))
                 .exceptionHandling((e) ->
@@ -63,6 +65,7 @@ public class SecurityConfig {
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         return  http
                     .formLogin(Customizer.withDefaults())
+                    .csrf(c -> c.disable())
                     .authorizeHttpRequests(c -> c.anyRequest().authenticated())
                     .build();
     }
@@ -126,6 +129,7 @@ public class SecurityConfig {
 
         //return new InMemoryRegisteredClientRepository(registeredClient);
 
+        /*
         RegisteredClient registeredClient = RegisteredClient
                 .withId(UUID.randomUUID().toString())
                 .clientId("client")
@@ -152,6 +156,37 @@ public class SecurityConfig {
 
         return new InMemoryRegisteredClientRepository(registeredClient, resourceServer);
 
+
+        RegisteredClient registeredClient = RegisteredClient
+                .withId(UUID.randomUUID().toString())
+                .clientId("client")
+                .clientSecret("secret")
+                .clientName("Custom")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .redirectUri("http://localhost:8080/login/oauth2/code/my_authorization_server")
+                .scope(OidcScopes.OPENID)
+                .build();
+*/
+
+        RegisteredClient registeredClient2 = RegisteredClient
+                .withId(UUID.randomUUID().toString())
+                .clientId("client2")
+                .clientSecret("secret2")
+                .clientName("Custom")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .redirectUri("http://127.0.0.1:7070")
+                .scope(OidcScopes.OPENID)
+                .clientSettings(ClientSettings.builder()
+                        .requireProofKey(false)  // PKCE не требуется
+                        .build())
+                .build();
+
+        return new InMemoryRegisteredClientRepository(registeredClient2);
+
+
+
     }
 
     @Bean
@@ -174,6 +209,7 @@ public class SecurityConfig {
         return AuthorizationServerSettings.builder().build();
     }
 
+    /*
     @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
         return context -> {
@@ -181,5 +217,7 @@ public class SecurityConfig {
             claims.claim("priority", "HIGH");
         };
     }
+
+     */
 
 }

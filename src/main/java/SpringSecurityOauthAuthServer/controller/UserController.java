@@ -31,6 +31,8 @@ public class UserController {
     public String hello() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         Authentication authentication = securityContext.getAuthentication();
+
+        log.info("Principal: " + authentication.getPrincipal());
         return "Hello " + authentication.getName();
     }
 
